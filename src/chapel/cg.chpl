@@ -116,13 +116,18 @@ module cg {
 
         if useGPU {
             //forall (i, j) in Domain.expand(-halo_depth) {
+            startProfiling("cg_calc_ur_loop");
             forall oneDIdx in reduced_OneD {
                 const ij = reduced_local_domain.orderToIndex(oneDIdx);
                 u[ij] += alpha * p[ij];
                 r[ij] -= alpha * w[ij];
                 temp[ij] = r[ij] ** 2;
             }
+            stopProfiling("cg_calc_ur_loop");
+
+            startProfiling("cg_calc_ur_red");
             rrn = gpuSumReduce(temp);
+            stopProfiling("cg_calc_ur_red");
         } else {
             var rrn_temp : real;
             forall ij in reduced_local_domain with (+ reduce rrn_temp) {

@@ -78,7 +78,7 @@ module settings{
   proc set_default_settings(ref setting_var : setting)
   {
     setting_var.test_problem_filename = "tea.problems";
-    setting_var.tea_in_filename = "tea.in";
+    setting_var.tea_in_filename = "tea_bm_5.in";
     setting_var.tea_out_filename = "tea.out";
     setting_var.grid_x_min = 0.0;
     setting_var.grid_y_min = 0.0;
