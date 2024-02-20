@@ -80,16 +80,17 @@ module cg {
         
         if useGPU {
             //forall (i, j) in Domain.expand(-halo_depth) {
-            forall oneDIdx in reduced_OneD {
+            var pw_temp: real;
+            forall oneDIdx in reduced_OneD with (+ reduce pw_temp) {
                 const (i,j) = reduced_local_domain.orderToIndex(oneDIdx);
                 const smvp = (1.0 + (kx[i+1, j]+kx[i, j])
                     + (ky[i, j+1]+ky[i, j]))*p[i, j]
                     - (kx[i+1, j]*p[i+1, j]+kx[i, j]*p[i-1, j])
                     - (ky[i, j+1]*p[i, j+1]+ky[i, j]*p[i, j-1]);
                 w[i,j] = smvp;
-                temp[i, j] = smvp * p[i, j]; 
+                pw_temp += smvp * p[i, j]; 
             }
-            pw = gpuSumReduce(temp);
+            pw = pw_temp;
         } else {
             var pw_temp : real;
             forall (i, j) in reduced_local_domain with (+ reduce pw_temp) {
@@ -115,19 +116,16 @@ module cg {
         startProfiling("cg_calc_ur");
 
         if useGPU {
-            //forall (i, j) in Domain.expand(-halo_depth) {
-            startProfiling("cg_calc_ur_loop");
-            forall oneDIdx in reduced_OneD {
+            var rrn_temp: real;
+            forall oneDIdx in reduced_OneD with (+ reduce rrn_temp) {
                 const ij = reduced_local_domain.orderToIndex(oneDIdx);
                 u[ij] += alpha * p[ij];
                 r[ij] -= alpha * w[ij];
-                temp[ij] = r[ij] ** 2;
-            }
-            stopProfiling("cg_calc_ur_loop");
+                rrn_temp += r[ij] ** 2;
 
-            startProfiling("cg_calc_ur_red");
-            rrn = gpuSumReduce(temp);
-            stopProfiling("cg_calc_ur_red");
+            }
+            rrn = rrn_temp;
+
         } else {
             var rrn_temp : real;
             forall ij in reduced_local_domain with (+ reduce rrn_temp) {
