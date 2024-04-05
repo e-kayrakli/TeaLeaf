@@ -29,6 +29,7 @@ module cg {
             u[ij] = energy[ij] *density[ij];
             w[ij] = if (coefficient == CONDUCTIVITY) then density[ij] else 1.0/density[ij];
         }
+
         const inner_1 = Domain[halo_depth..<y-1, halo_depth..<x-1];
         //forall (i, j) in inner_1 {
         forall oneDIdx in 0..#inner_1.size {
